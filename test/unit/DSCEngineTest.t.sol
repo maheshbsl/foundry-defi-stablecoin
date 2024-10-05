@@ -98,6 +98,8 @@ contract DscEngineTest is Test {
     //    //deposit with zero value
     //    engine.depositCollateral(weth, 0);
 
+    vm.stopPrank();
+
 
        console.log(userCollateral);
        console.log(AMOUNT_COLLATERAL);

@@ -86,6 +86,10 @@ contract DSCEngine {
         address indexed user, address indexed tokenCollateralAddress, uint256 indexed amountCollateral
     );
 
+    event CollateralRedeemed(
+        address indexed user, address indexed tokaenCollateralAddress, uint256 indexed amountCollateral
+    );
+
     /////////////////
     // Modifiers
     ///////////////////
@@ -131,7 +135,20 @@ contract DSCEngine {
     // External Functions
     ///////////////////
 
-    function depositCollateralAndMintDsc() external {}
+    /**
+     *
+     * @param tokenCollateralAddress The address of the token to deposit as Collateral
+     * @param amountCollateral The amount of collateral user wants to deposit
+     * @param amountDscTOMint The amount of decentralized stablecoins user wants to mint
+     */
+    function depositCollateralAndMintDsc(
+        address tokenCollateralAddress,
+        uint256 amountCollateral,
+        uint256 amountDscTOMint
+    ) external {
+        depositCollateral(tokenCollateralAddress, amountCollateral);
+        mintDsc(amountDscTOMint);
+    }
 
     /**
      * depositCollateral()
@@ -140,7 +157,7 @@ contract DSCEngine {
      *
      */
     function depositCollateral(address tokenCollateralAddres, uint256 amountCollateral)
-        external
+        public
         moreThanZero(amountCollateral)
         isTokenAllowed(tokenCollateralAddres)
     {
@@ -159,16 +176,41 @@ contract DSCEngine {
         }
     }
 
-    function redeemCollateralForDsc() external {}
+    function redeemCollateralForDsc(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountDscToBurn)
+        external
+        moreThanZero(amountCollateral)
+    {
+        burnDsc(amountDscToBurn);
+        redeemCollateral(tokenCollateralAddress, amountCollateral);
+    }
 
-    function redeemCollateral() external {}
+    /**
+     * redeemCollateral()
+     * @param tokenCollateralAddress The address of the token collateral user wants to redeem
+     * @param amountCollateral The amount of Collateral user wants to redeem
+     * @dev health factor must be > 1 after collateral pulled
+     */
+    function redeemCollateral(address tokenCollateralAddress, uint256 amountCollateral)
+        public
+        moreThanZero(amountCollateral)
+    {
+        s_collateralDeposited[msg.sender][tokenCollateralAddress] -= amountCollateral;
+        emit CollateralRedeemed(msg.sender, tokenCollateralAddress, amountCollateral);
+
+        // Transfer the collateral to user
+        (bool success) = IERC20(tokenCollateralAddress).transfer(msg.sender, amountCollateral);
+        if (!success) {
+            revert DSCEngine_TransferFailed();
+        }
+        _revertIfHealthFactorIsBroken(msg.sender);
+    }
 
     /**
      * mintDsc()
      * @param amountDscToMint The amount of decentralized stablecoin User wants to mint
      * @dev make sure the amount is greater than zero
      */
-    function mintDsc(uint256 amountDscToMint) external moreThanZero(amountDscToMint) {
+    function mintDsc(uint256 amountDscToMint) public moreThanZero(amountDscToMint) {
         //update the amount of DSC user want to mint
         s_DSCMinted[msg.sender] += amountDscToMint;
         // if they minted too much
@@ -180,7 +222,16 @@ contract DSCEngine {
         }
     }
 
-    function burnDsc() external {}
+    function burnDsc(uint256 amount ) public  moreThanZero(amount)
+    {
+        // update the mintedDSC value in the mapping
+        s_DSCMinted[msg.sender] -= amount;
+        (bool success) = i_Dsc.transferFrom(msg.sender, address(this), amount);
+        if (!success) {
+            revert DSCEngine_TransferFailed();
+        }
+        _revertIfHealthFactorIsBroken(msg.sender);
+    }
 
     function liquidate() external {}
 
