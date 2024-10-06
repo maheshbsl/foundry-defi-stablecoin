@@ -52,7 +52,12 @@ contract DecentralizedStableCoin is ERC20Burnable, Ownable {
         }
         super.burn(_amount);
     }
-
+    /**
+     * @param _to The address to mint the token
+     * @param _amount amount of token
+     * @dev Ensure that `to` is not a zero address
+     * @dev The amount must be greater than zero
+     */
     function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
         if (_to == address(0)) {
             revert DecentralizedStabelCoin_NotZeroAddress();
