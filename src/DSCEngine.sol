@@ -304,7 +304,11 @@ contract DSCEngine {
 
     function _redeemCollateral(address tokenCollateralAddress, uint256 amountCollateral, address from, address to)
         private
+        
     {
+        console.log("address from", from);
+        console.log("addres to", to);
+        console.log("amount collateral", amountCollateral);
         s_collateralDeposited[from][tokenCollateralAddress] -= amountCollateral;
         emit CollateralRedeemed(from, to, tokenCollateralAddress, amountCollateral);
 
@@ -330,19 +334,29 @@ contract DSCEngine {
      * @dev Return how close to liquidition the user is
      *
      */
-    function _healthFactor(address user) internal view returns (uint256 hF) {
+    function _healthFactor(address user) private view returns (uint256 hF) {
         // to check health factor we will need
         // 1 .Total dsc minted by user
         // 2 Total value of collateral user has deposited
 
-        (uint256 totalDscMinted, uint256 totalCollateralValueInUsd,) =
-            _getAccountInformation(user);
-        console.log(totalCollateralValueInUsd);
-
-        uint256 collateralAdjustedForThreshold = (totalCollateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
-        hF = ((collateralAdjustedForThreshold * PRECISION) / totalDscMinted);
-        return hF;
+        (uint256 totalDscMinted, uint256 totalCollateralValueInUsd,) = _getAccountInformation(user);
+        hF = _calculateHealthfactor(totalDscMinted, totalCollateralValueInUsd);
+        return hF;   
     }
+
+    function _calculateHealthfactor(uint256 totalDscMinted, uint256 totalCollateralValueInUsd) internal pure returns (uint256 health) {
+
+        // If no DSC is minted, return max health factor
+        if (totalDscMinted == 0) {
+            return type(uint256).max; // Return maximum value for safe health factor
+        }
+        
+        uint256 collateralAdjustedForThreshold = (totalCollateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        health = ((collateralAdjustedForThreshold * PRECISION) / totalDscMinted);
+        return health;
+
+    }
+
 
     // check health factor (do they if enough collateral)
     // IF NOT REVERTS

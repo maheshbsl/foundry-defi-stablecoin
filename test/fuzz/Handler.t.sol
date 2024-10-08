@@ -45,7 +45,6 @@ contract Handler is Test {
         dscEngine.depositCollateral(address(collateral), amountCollateral);
         vm.stopPrank();
         usersWithCollateralDeposited.push(msg.sender);
-
     }
 
     //mint dsc
@@ -63,7 +62,7 @@ contract Handler is Test {
         }
 
         amount = bound(amount, 0, uint256(maxDscToMint));
-        if (amount < 0) {
+        if (amount == 0) {
             return;
         }
 

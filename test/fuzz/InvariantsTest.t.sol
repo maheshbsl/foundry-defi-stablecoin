@@ -7,7 +7,7 @@
 
 pragma solidity ^0.8.26;
 
-import {Test,console} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {DeployDsc} from "script/DeployDsc.s.sol";
 import {DecentralizedStableCoin} from "src/DecentralizedStableCoin.sol";
@@ -46,9 +46,17 @@ contract TestInvariant is StdInvariant, Test {
         uint256 totalWethDeposited = ERC20Mock(weth).balanceOf(address(dscEngine));
         uint256 totalWbtcDeposited = ERC20Mock(wbtc).balanceOf(address(dscEngine));
 
-        assert(totalWethDeposited + totalWbtcDeposited >= totalSupply);
+        // calculate the value of those tokens
+        uint256 wethValue = dscEngine.getUsdValue(weth, totalWethDeposited);
+        uint256 wbtcValue = dscEngine.getUsdValue(wbtc, totalWbtcDeposited);
+
+
+
         console.log("timeMintisCalled", handler.timesMintCalled());
         console.log("total eth", totalWethDeposited);
         console.log("total btc", totalWbtcDeposited);
+        console.log("total supply", totalSupply);
+
+        assert(wethValue + wbtcValue >= totalSupply);
     }
 }

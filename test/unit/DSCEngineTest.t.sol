@@ -70,7 +70,7 @@ contract DscEngineTest is Test {
     function testGetUsdValue() public view {
         uint256 ethAmount = 1 ether;
         //   2000 * 15e18 = 30000
-        uint256 expectedUsd = 2000;
+        uint256 expectedUsd = 2000 ether;
         uint256 actualUsd = engine.getUsdValue(weth, ethAmount);
 
         assert(expectedUsd == actualUsd);
@@ -79,7 +79,7 @@ contract DscEngineTest is Test {
 
     // usd => eth
     function testGetTokenAmountFromUsd() public view {
-        uint256 usdAmount = 100;
+        uint256 usdAmount = 100 ether;
 
         uint256 expectedToken = 0.05 ether;
         uint256 actualToken = engine.getTokenAmountFromUsd(weth, usdAmount);
@@ -87,8 +87,8 @@ contract DscEngineTest is Test {
         // let's test that these two are same or not
         assertEq(expectedToken, actualToken);
 
-        console.log(expectedToken); // 5e16
-        console.log(actualToken); // 5e16
+        console.log("expected token", expectedToken); // 5e16
+        console.log("actual token", actualToken); // 5e16
     }
 
     //////////////////////
@@ -231,6 +231,6 @@ contract DscEngineTest is Test {
         console.log("totalDscMinted", totalDscMinted);
         console.log("amountCollateral", AMOUNT_COLLATERAL);
 
-        console.log("health factor", healthfactor, "min health factor",  MIN_HEALTH_FACTOR);
+        console.log("health factor", healthfactor, "min health factor", MIN_HEALTH_FACTOR);
     }
 }
