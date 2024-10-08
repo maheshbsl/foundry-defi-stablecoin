@@ -335,12 +335,12 @@ contract DSCEngine {
         // 1 .Total dsc minted by user
         // 2 Total value of collateral user has deposited
 
-        (uint256 totalDscMinted, uint256 totalCollateralValueInUsd, uint256 totalCollateralAmount) =
+        (uint256 totalDscMinted, uint256 totalCollateralValueInUsd,) =
             _getAccountInformation(user);
-            console.log(totalCollateralValueInUsd);
+        console.log(totalCollateralValueInUsd);
 
-        uint256 collateralAdjustedForThreshold = (totalCollateralAmount * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
-        hF = ((collateralAdjustedForThreshold) / totalDscMinted);
+        uint256 collateralAdjustedForThreshold = (totalCollateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        hF = ((collateralAdjustedForThreshold * PRECISION) / totalDscMinted);
         return hF;
     }
 
@@ -373,7 +373,7 @@ contract DSCEngine {
         // 100 / 2000 = 0.05 eth(token)
         // (100e18 * 1e18) / (2000e8 * 1e10)
         uint256 amountOfTokenEquivalentToDebt =
-            ((usdAmountInWei * PRECISION) * PRECISION) / (uint256(price) * ADDITIONAL_PRICE_PRICISION);
+            (usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_PRICE_PRICISION);
         return amountOfTokenEquivalentToDebt;
     }
 
@@ -397,10 +397,11 @@ contract DSCEngine {
     function getUsdValue(address token, uint256 amount) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
         (, int256 price,,,) = priceFeed.latestRoundData();
-        // if 1 ETH = 1000, Chainlink will return (1000 * 1e8)
+        // if 1 ETH = 2000, Chainlink will return (2000 * 1e8)
         // so we have to make it 1e18 to make it compaitalbe with our amount which will be in 1e18
-        // and finally divide by 1e18 to get a usd value
-        return ((uint256(price) * ADDITIONAL_PRICE_PRICISION) * amount) / (PRECISION * PRECISION);
+       // (2000 * 1e8 * 1e10) * (2e18) / 1e18
+
+        return ((uint256(price) * ADDITIONAL_PRICE_PRICISION) * amount) / (PRECISION);
     }
 
     function getAccountInformation(address user)
@@ -414,5 +415,13 @@ contract DSCEngine {
 
     function getHealthFactor(address user) public view returns (uint256 health) {
         health = _healthFactor(user);
+    }
+
+    function getCollateralTokens() external view returns (address[] memory) {
+        return s_collateralTokens;
+    }
+
+    function getCollateralBalanceOfUser(address user, address token) external view returns (uint256) {
+        return s_collateralDeposited[user][token];
     }
 }

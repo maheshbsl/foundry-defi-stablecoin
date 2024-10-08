@@ -24,11 +24,11 @@ contract DeployDsc is Script {
 
         DecentralizedStableCoin dsc = new DecentralizedStableCoin();
         DSCEngine engine = new DSCEngine(tokenAddresses, priceFeedAddresses, address(dsc));
-        // decentralized stablecoin contract transfer its ownership to dscengine for full control. 
+        // decentralized stablecoin contract transfer its ownership to dscengine for full control.
         dsc.transferOwnership(address(engine));
 
         vm.stopBroadcast();
 
-        return (dsc, engine, helperConfig);       
+        return (dsc, engine, helperConfig);
     }
 }
